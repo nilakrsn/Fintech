@@ -28,7 +28,7 @@ class TransactionController extends Controller
     }
 
     public function payNow(){
-        $status = 'diambil';
+        $status = 'dibayar';
         $order_id = 'INV_' . Auth::user()->id . date('YmdHis');
 
         $carts = Transaction::where('user_id', Auth::user()->id)->where('status', 'dikeranjang')->get();

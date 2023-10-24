@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Transaction;
+use App\Models\User;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,31 +28,56 @@ class HomeController extends Controller
      */
     public function index()
     {
-        $wallets = Wallet::where('user_id', Auth::user()->id)->where('status', 'selesai')->get();
-        $credit = 0;
-        $debit = 0;
+        if(Auth::user()->role == "siswa"){
 
-
-        foreach($wallets as $wallet){
-            $credit += $wallet->credit;
-            $debit += $wallet->debit;
+            $wallets = Wallet::where('user_id', Auth::user()->id)->where('status', 'selesai')->get();
+            $credit = 0;
+            $debit = 0;
+    
+    
+            foreach($wallets as $wallet){
+                $credit += $wallet->credit;
+                $debit += $wallet->debit;
+            }
+    
+            $saldo = $credit - $debit;
+    
+            $products = Product::all();
+    
+            $carts = Transaction::where('status', 'dikeranjang')->where('user_id', Auth::user()->id)->get();
+            $total_biaya = 0;
+            foreach($carts as $cart){
+                $total_price = $cart->price * $cart->quantity;
+                $total_biaya += $total_price;
+            }
+    
+            $mutasi = Wallet::where('user_id', Auth::user()->id)->orderBy('created_at', 'DESC')->get();
+            
+            $transactions = Transaction::where('status', 'diambil')->where('user_id', Auth::user()->id)->orderBy('created_at', 'DESC')->paginate(5)->groupBy('order_id');
+            
+            return view('home', compact('saldo', 'products', 'carts', 'total_biaya', 'mutasi', 'transactions'));
         }
+        if(Auth::user()->role == "bank"){
+            $wallets = Wallet::where('status', 'selesai')->get();
+            $credit = 0;
+            $debit = 0;
+    
+    
+            foreach($wallets as $wallet){
+                $credit += $wallet->credit;
+                $debit += $wallet->debit;
+            }
+    
+            $saldo = $credit - $debit;
 
-        $saldo = $credit - $debit;
+            $nasabah = User::where('role', 'siswa')->get()->count(); 
 
-        $products = Product::all();
+            $transactions = Transaction::all()->groupBy('order_id')->count();
 
-        $carts = Transaction::where('status', 'dikeranjang')->where('user_id', Auth::user()->id)->get();
-        $total_biaya = 0;
-        foreach($carts as $cart){
-            $total_price = $cart->price * $cart->quantity;
-            $total_biaya += $total_price;
+            $requestTopUp = Wallet::where('status', 'diproses')->orderBy('created_at' , 'DESC')->get();
+
+            return view('home', compact('saldo', 'nasabah', 'transactions', 'requestTopUp'));
         }
-
-        $mutasi = Wallet::where('user_id', Auth::user()->id)->orderBy('created_at', 'DESC')->get();
-        
-        $transactions = Transaction::where('status', 'diambil')->where('user_id', Auth::user()->id)->orderBy('created_at', 'DESC')->paginate(5)->groupBy('order_id');
-        
-        return view('home', compact('saldo', 'products', 'carts', 'total_biaya', 'mutasi', 'transactions'));
     }
+
 }

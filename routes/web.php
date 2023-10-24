@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -24,3 +25,9 @@ Route::post('/addToCart', [App\Http\Controllers\TransactionController::class, 'a
 Route::post('/payNow', [App\Http\Controllers\TransactionController::class, 'payNow'])->name('payNow');
 Route::post('/topUp', [App\Http\Controllers\WalletController::class, 'topUp'])->name('topUp');
 Route::get('/download{order_id}', [App\Http\Controllers\TransactionController::class, 'download'])->name('download');
+Route::post('/acceptRequest', [App\Http\Controllers\WalletController::class, 'acceptRequest'])->name('acceptRequest');
+
+Route::get('logout', function(){
+    Auth::logout();
+     return redirect('/');
+});
